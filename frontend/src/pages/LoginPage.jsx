@@ -59,7 +59,7 @@ function LoginPage() {
   return (
     <div className="auth-page-container">
       <div className="auth-form-box">
-        <h2>Login to Smart Resume Analyzer</h2>
+        <h2>Smart Resume Analyser</h2>
         <form onSubmit={handleSubmit}>
           
           <div className="form-group">
@@ -94,7 +94,7 @@ function LoginPage() {
         </form>
         
         <p className="auth-switch">
-          Need an account? <Link to="/signup">Sign Up Here</Link>
+          Need an account? <Link to="/signup">Register Now</Link>
         </p>
       </div>
     </div>

@@ -3,26 +3,21 @@
 /* ========================================================================= */
 :root {
     /* Color Palette */
-    --emerald-dark: #004d40;    /* Deep Forest Green/Primary Color */
-    --gold-accent: #ffb300;     /* Warm Gold/Secondary Accent */
-    --text-primary: #212529;    /* Near-black for main text */
-    --text-muted: #495057;      /* Muted gray for descriptions */
-    --background-light: #f4f6f9;/* Off-white/Light Slate background */
-    --card-surface: #ffffff;    /* Pure white for cards and forms */
-    --border-color: #e0e0e0;    /* Soft border color */
-    
-    /* Status Colors */
-    --success-color: #388e3c; /* Darker Green */
-    --error-color: #d32f2f;   /* Deep Red */
+    --emerald-dark: #004d40;     /* Deep Forest Green/Emerald (Primary) */
+    --gold-accent: #ffb300;      /* Warm Gold/Amber (Accent) */
+    --card-surface: #ffffff;     /* Clean White */
+    --background-light: #f5f8f7; /* Very light subtle green-gray background */
+    --text-color: #333333;       /* Dark Text */
+    --text-muted: #666666;       /* Muted gray for secondary info */
+    --success-color: #4CAF50;
+    --error-color: #F44336;
+    --border-color: #e0e0e0;
 
     /* Spacing */
     --spacing-xs: 0.5rem;
     --spacing-sm: 1rem;
     --spacing-md: 1.5rem;
     --spacing-lg: 2rem;
-    
-    /* Font */
-    --font-family-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 }
 
 * {
@@ -32,16 +27,10 @@
 }
 
 body {
-    font-family: var(--font-family-sans);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: var(--background-light);
-    color: var(--text-primary);
+    color: var(--text-color);
     line-height: 1.6;
-}
-
-h1, h2, h3 {
-    color: var(--emerald-dark);
-    margin-bottom: var(--spacing-sm);
-    font-weight: 700;
 }
 
 .page-container {
@@ -50,11 +39,17 @@ h1, h2, h3 {
     padding: var(--spacing-lg) var(--spacing-md);
 }
 
+h1, h2, h3 {
+    color: var(--emerald-dark);
+    margin-bottom: var(--spacing-sm);
+    font-weight: 600;
+}
+
 .divider {
     border: 0;
     height: 1px;
     background: var(--border-color);
-    margin: var(--spacing-md) 0;
+    margin: var(--spacing-lg) 0;
 }
 
 /* ========================================================================= */
@@ -64,10 +59,7 @@ h1, h2, h3 {
 .app-header {
     background-color: var(--card-surface);
     border-bottom: 3px solid var(--emerald-dark);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    position: sticky;
-    top: 0;
-    z-index: 1000;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .app-nav {
@@ -76,11 +68,11 @@ h1, h2, h3 {
     align-items: center;
     max-width: 1200px;
     margin: 0 auto;
-    padding: var(--spacing-sm) var(--spacing-md);
+    padding: 12px var(--spacing-md);
 }
 
 .nav-links a {
-    color: var(--text-primary);
+    color: var(--emerald-dark);
     text-decoration: none;
     margin-right: var(--spacing-md);
     font-weight: 500;
@@ -99,18 +91,18 @@ h1, h2, h3 {
 
 .logout-button {
     background: var(--gold-accent);
-    color: var(--emerald-dark);
+    color: var(--text-color);
     border: none;
     padding: 8px 15px;
-    border-radius: 6px;
+    border-radius: 4px;
     cursor: pointer;
-    font-weight: 700;
+    font-weight: 600;
     transition: background-color 0.2s, box-shadow 0.2s;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .logout-button:hover {
     background-color: #ff9800;
-    box-shadow: 0 2px 8px rgba(255, 179, 0, 0.4);
 }
 
 /* ========================================================================= */
@@ -121,31 +113,32 @@ h1, h2, h3 {
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: calc(100vh - 80px);
+    min-height: calc(100vh - 60px);
 }
 
-.auth-form-box,
-.job-form-container,
-.resume-uploader-container {
+.auth-form-box {
     background: var(--card-surface);
     padding: var(--spacing-lg);
-    border-radius: 10px;
-    border: 1px solid var(--border-color);
-    box-shadow: 0 6px 20px rgba(0, 77, 64, 0.1); /* Subtle emerald shadow */
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     width: 100%;
-    max-width: 500px;
-    margin: var(--spacing-md) auto;
+    max-width: 400px;
 }
 
 .auth-form-box h2 {
     text-align: center;
-    margin-bottom: var(--spacing-lg);
     color: var(--emerald-dark);
 }
 
+.form-group {
+    margin-bottom: var(--spacing-md);
+}
+
 .form-group label {
+    display: block;
+    margin-bottom: var(--spacing-xs);
     font-weight: 600;
-    color: var(--text-primary);
+    font-size: 0.95rem;
 }
 
 input[type="text"],
@@ -156,22 +149,23 @@ select {
     width: 100%;
     padding: 10px;
     border: 1px solid var(--border-color);
-    border-radius: 6px;
+    border-radius: 4px;
     font-size: 1rem;
-    background-color: var(--background-light);
-    color: var(--text-primary);
+    background-color: #fff;
+    transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 input:focus,
 textarea:focus,
 select:focus {
     outline: none;
-    border-color: var(--emerald-dark);
-    box-shadow: 0 0 0 0.2rem rgba(0, 77, 64, 0.15);
+    border-color: var(--gold-accent);
+    box-shadow: 0 0 5px rgba(255, 179, 0, 0.5);
 }
 
 button[type="submit"],
-.btn, .btn-primary {
+.btn-primary,
+.btn-ai-action {
     display: block;
     width: 100%;
     padding: 12px;
@@ -179,7 +173,7 @@ button[type="submit"],
     background-color: var(--emerald-dark);
     color: white;
     border: none;
-    border-radius: 6px;
+    border-radius: 4px;
     cursor: pointer;
     font-size: 1rem;
     font-weight: 600;
@@ -187,32 +181,37 @@ button[type="submit"],
 }
 
 button[type="submit"]:hover:not(:disabled),
-.btn-primary:hover {
+.btn-primary:hover,
+.btn-ai-action:hover:not(:disabled) {
     background-color: #003830;
     transform: translateY(-1px);
+}
+
+button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    transform: none;
 }
 
 .error-message,
 .form-message.error {
     color: var(--error-color);
-    border: 1px solid var(--error-color);
-    background-color: rgba(211, 47, 47, 0.1);
-    /* Shared styles */
     margin: var(--spacing-sm) 0;
     padding: 10px;
-    border-radius: 6px;
-    font-weight: 500;
+    border: 1px solid var(--error-color);
+    background-color: rgba(244, 67, 54, 0.05);
+    border-left: 4px solid var(--error-color);
+    border-radius: 4px;
 }
 
 .form-message.success {
     color: var(--success-color);
-    border: 1px solid var(--success-color);
-    background-color: rgba(56, 142, 60, 0.1);
-    /* Shared styles */
     margin: var(--spacing-sm) 0;
     padding: 10px;
-    border-radius: 6px;
-    font-weight: 500;
+    border: 1px solid var(--success-color);
+    background-color: rgba(76, 175, 80, 0.05);
+    border-left: 4px solid var(--success-color);
+    border-radius: 4px;
 }
 
 .auth-switch a {
@@ -222,85 +221,172 @@ button[type="submit"]:hover:not(:disabled),
 }
 
 /* ========================================================================= */
-/* 4. DASHBOARD & RECRUITER TOOLS (MyJobsList) */
+/* 4. DASHBOARD & RECRUITER TOOLS (DashboardPage, MyJobsList FIXES) */
 /* ========================================================================= */
+
+.job-form-container,
+.resume-uploader-container {
+    /* Central card styling for both components */
+    background: var(--card-surface);
+    padding: var(--spacing-lg);
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    margin-bottom: var(--spacing-lg);
+    max-width: 600px; /* Constrain width for cleaner forms */
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Job Seeker Link Box */
+.job-board-link-box {
+    background: var(--card-surface);
+    padding: var(--spacing-lg);
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    text-align: center;
+}
+
+.job-board-link-box .btn-primary {
+    max-width: 300px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* MyJobsList Styles */
+.my-jobs-list-container {
+    max-width: 900px; /* Constrain list width */
+    margin: 0 auto;
+}
 
 .job-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: var(--card-surface);
+    background: white;
     border: 1px solid var(--border-color);
-    border-left: 5px solid var(--gold-accent); /* Accent bar on the left */
-    border-radius: 6px;
+    border-left: 5px solid var(--gold-accent); /* Accent bar */
+    border-radius: 4px;
     padding: var(--spacing-md);
     margin-bottom: var(--spacing-sm);
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .job-info h4 {
-    color: var(--text-primary);
+    margin-bottom: 5px;
+    color: var(--emerald-dark);
+}
+
+.job-actions {
+    /* FIX: Ensure buttons are aligned vertically and spaced */
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.job-actions button {
+    width: auto;
+    display: inline-block;
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    box-shadow: none;
+    margin-top: 0; /* Override form button margin */
 }
 
 .job-actions .view-applicants-btn {
     background-color: var(--emerald-dark);
-    color: white;
+}
+.job-actions .view-applicants-btn:hover {
+    background-color: #003830;
 }
 
 .job-actions .delete-btn {
     background-color: var(--error-color);
-    color: white;
+}
+.job-actions .delete-btn:hover {
+    background-color: #d32f2f;
 }
 
 /* ========================================================================= */
-/* 5. JOB BOARD (JobCard) */
+/* 5. JOB BOARD (JobBoardPage, JobDetailPage) */
 /* ========================================================================= */
 
 .job-cards-container {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: var(--spacing-md);
+    margin-top: var(--spacing-md);
 }
 
 .job-card {
     background: var(--card-surface);
     padding: var(--spacing-md);
-    border-radius: 8px;
-    border: 1px solid var(--border-color);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-    transition: transform 0.2s, border-color 0.2s;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-top: 3px solid var(--emerald-dark);
+    transition: transform 0.2s;
 }
 
 .job-card:hover {
     transform: translateY(-3px);
-    border-color: var(--gold-accent);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .job-card h3 {
     color: var(--emerald-dark);
+    margin-bottom: var(--spacing-xs);
+}
+
+.job-card .company-name,
+.job-card .required-skills {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-bottom: var(--spacing-sm);
+}
+
+.job-card .btn-details {
+    margin-top: var(--spacing-sm);
+    padding: 8px 10px;
+    font-size: 0.9rem;
+}
+
+/* Job Detail Page Styles */
+.job-detail-page h1 {
+    color: var(--emerald-dark);
+}
+
+.job-detail-page .company-name-detail {
+    font-size: 1.1rem;
+    color: var(--text-muted);
+    margin-bottom: var(--spacing-sm);
+}
+
+.skills-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-xs);
+    margin-top: var(--spacing-sm);
 }
 
 .skill-tag {
     background-color: var(--gold-accent);
     color: var(--emerald-dark);
-    padding: 5px 12px;
-    border-radius: 20px;
-    font-size: 0.8rem;
-    font-weight: 600;
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 0.85rem;
+    font-weight: 500;
 }
 
-
 /* ========================================================================= */
-/* 6. MATCH ANALYSIS & APPLICANTS */
+/* 6. MATCH ANALYSIS & APPLICANTS (FIXED GRID STRUCTURE) */
 /* ========================================================================= */
 
 .analysis-container {
-    background: var(--background-light);
-    border: 2px solid var(--emerald-dark);
+    background: var(--card-surface);
+    border: 2px solid var(--border-color);
     border-radius: 10px;
     padding: var(--spacing-md);
     margin-top: var(--spacing-md);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
 
 .match-score span {
@@ -308,26 +394,121 @@ button[type="submit"]:hover:not(:disabled),
     font-size: 3.5rem;
     font-weight: 800;
     color: var(--gold-accent);
-    text-shadow: 1px 1px 3px rgba(0, 77, 64, 0.2);
 }
 
-.skills-matched h4 { color: var(--success-color); }
-.skills-missing h4 { color: var(--error-color); }
+.applicant-controls input {
+    width: 100%;
+    max-width: 400px; 
+    margin-bottom: var(--spacing-md);
+    padding: 10px;
+}
+
+.applicants-list {
+    list-style: none;
+    padding: 0;
+    background: var(--card-surface);
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+}
+
+/* CRITICAL FIX: Define the grid layout for 5 columns */
+.applicant-item {
+    display: grid;
+    /* 5 columns: Rank, Email, Score, Skills, Actions */
+    grid-template-columns: 0.5fr 2fr 1fr 2fr 1.5fr; 
+    align-items: center;
+    padding: 12px var(--spacing-md);
+    border-bottom: 1px solid var(--border-color);
+    transition: background-color 0.15s;
+}
+
+.applicant-item:not(.header-row):hover {
+    background-color: var(--background-light);
+}
 
 .applicant-item.header-row {
-    background-color: var(--background-light);
+    background-color: var(--emerald-dark); 
+    color: white; 
     font-weight: 700;
-    color: var(--emerald-dark);
-    border-bottom: 2px solid var(--border-color);
-}
-
-.score-badge {
-    font-weight: 700;
-    background-color: var(--gold-accent);
-    color: var(--emerald-dark); 
+    padding: 15px var(--spacing-md);
+    border-bottom: 2px solid var(--gold-accent); 
 }
 
 .rank-col {
     color: var(--gold-accent);
     font-weight: 800;
+}
+
+.score-badge {
+    background-color: var(--gold-accent);
+    color: var(--emerald-dark); 
+    justify-self: center; 
+}
+
+.btn-view-resume {
+    background-color: var(--emerald-dark);
+    color: white;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    width: 100%;
+    margin-top: 0; /* Remove button margin */
+}
+
+/* ========================================================================= */
+/* 7. AI TOOLS (Cover Letter / Interview Coach) */
+/* ========================================================================= */
+
+.seeker-tools {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+}
+
+.ai-tool-box {
+    background: var(--card-surface);
+    padding: var(--spacing-lg);
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-top: 5px solid var(--gold-accent);
+}
+
+.ai-tool-box h3 {
+    color: var(--emerald-dark);
+    margin-bottom: var(--spacing-sm);
+}
+
+.btn-ai-action {
+    max-width: 300px;
+    margin-top: var(--spacing-sm);
+    padding: 10px 15px;
+    font-size: 0.95rem;
+}
+
+.ai-output-area {
+    margin-top: var(--spacing-md);
+    padding: var(--spacing-md);
+    background-color: var(--background-light);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    white-space: pre-wrap; /* Preserve formatting for AI output */
+    line-height: 1.8;
+}
+
+.ai-output-area h4 {
+    color: var(--emerald-dark);
+    margin-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 5px;
+}
+
+/* Interview Coach specific list styling */
+.interview-coach-output ol {
+    padding-left: 20px;
+}
+
+.interview-coach-output li {
+    margin-bottom: 10px;
+    color: var(--text-color);
 }

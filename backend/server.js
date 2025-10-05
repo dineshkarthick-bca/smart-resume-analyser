@@ -1,20 +1,15 @@
-// 1. Core Imports
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const admin = require('firebase-admin');
-
-// File upload and PDF parsing libraries
 const multer = require('multer');
 const pdf = require('pdf-parse');
 const fs = require('fs');
 const path = require('path');
 
-// Load environment variables (for the port number)
 dotenv.config();
 
-// 2. Initialize Firebase Admin SDK
-// The serviceAccountKey.json is the downloaded key from Firebase Console (Phase 1)
+// 1. Initialize Firebase Admin SDK
 const serviceAccount = require('./serviceAccountKey.json'); 
 
 admin.initializeApp({
@@ -25,35 +20,43 @@ const db = admin.firestore();
 const app = express();
 const PORT = process.env.PORT || 5001;
 
-// 3. Middleware Configuration
-// Use CORS to allow requests from the frontend (running on a different port)
+// 2. Middleware Configuration
 app.use(cors({ origin: 'http://localhost:5173' })); 
-app.use(express.json()); // Body parser for JSON data
-app.use(express.urlencoded({ extended: true })); // Body parser for URL encoded data
+app.use(express.json()); 
+app.use(express.urlencoded({ extended: true })); 
 
-// Configure Multer for file upload (storing the file in memory temporarily)
+// 3. Configure Multer for File Storage
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        // Ensure the 'uploads' directory exists
+        const uploadDir = path.join(__dirname, 'uploads');
+        if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir);
+        }
+        cb(null, 'uploads/');
+    },
+    filename: (req, file, cb) => {
+        // Use a unique name for the uploaded file: userId-timestamp.pdf
+        const userId = req.body.userId;
+        const extension = path.extname(file.originalname);
+        cb(null, `${userId}-${Date.now()}${extension}`);
+    }
+});
+
 const upload = multer({ 
-  storage: multer.memoryStorage(),
-  limits: { fileSize: 5 * 1024 * 1024 } // 5MB file size limit
+    storage: storage,
+    limits: { fileSize: 5 * 1024 * 1024 } // 5MB file size limit
 });
 
 // =========================================================================
-// 4. CORE MATCHING UTILITY (Phase 5)
+// 4. CORE MATCHING UTILITY & GEMINI HELPERS
 // =========================================================================
 
-/**
- * Compares a resume's text content against a job's required skills.
- * @param {string} resumeText - The raw text extracted from the user's PDF resume.
- * @param {string} jobSkillsString - A comma-separated string of required skills (e.g., "React, Node.js, Firebase").
- * @returns {{matchScore: number, matchedSkills: string[], missingSkills: string[]}}
- */
 const matchResumeToJob = (resumeText, jobSkillsString) => {
-  // Helper to normalize text (lowercase and remove most punctuation/symbols)
   const normalize = (text) => text.toLowerCase().replace(/[^a-z0-9\s,]/g, ' ').replace(/\s+/g, ' ').trim();
 
   const normalizedResume = normalize(resumeText);
   
-  // Process job skills into a clean array
   const requiredSkills = jobSkillsString
     .toLowerCase()
     .split(',')
@@ -61,16 +64,13 @@ const matchResumeToJob = (resumeText, jobSkillsString) => {
     .filter(skill => skill.length > 0);
 
   if (requiredSkills.length === 0) {
-    // If the job requires no skills, it's a 100% match
     return { matchScore: 100, matchedSkills: [], missingSkills: [] };
   }
 
   let matchedSkills = [];
   let missingSkills = [];
 
-  // Check for skill presence
   requiredSkills.forEach(skill => {
-    // We use .includes() for simple substring matching
     if (normalizedResume.includes(skill)) {
       matchedSkills.push(skill);
     } else {
@@ -78,19 +78,47 @@ const matchResumeToJob = (resumeText, jobSkillsString) => {
     }
   });
 
-  // Calculate score as a percentage and round it
   const matchScore = Math.round((matchedSkills.length / requiredSkills.length) * 100);
 
   return { matchScore, matchedSkills, missingSkills };
 };
 
+// --- Helper function for making Gemini API calls ---
+const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=`;
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || ""; // Loaded from .env
+
+const generateGeminiContent = async (systemPrompt, userQuery) => {
+    if (!GEMINI_API_KEY && !process.env.CANVAS_MODE) {
+        throw new Error("GEMINI_API_KEY is not set.");
+    }
+    
+    const payload = {
+        contents: [{ parts: [{ text: userQuery }] }],
+        systemInstruction: { parts: [{ text: systemPrompt }] },
+    };
+
+    const response = await fetch(GEMINI_API_URL + GEMINI_API_KEY, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    });
+
+    const result = await response.json();
+    const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+    if (!text) {
+        console.error("Gemini Response Error:", result);
+        throw new Error("Gemini returned no text content or encountered an API error.");
+    }
+    return text;
+};
+
+
 // =========================================================================
 // 5. API ENDPOINTS
 // =========================================================================
 
-// --- A. Job Management (Phase 3 & 4) ---
-
-// POST /api/jobs - Recruiter: Creates a new job posting
+// --- A. Job Management (Routes unchanged from previous) ---
 app.post('/api/jobs', async (req, res) => {
   try {
     const { title, company, description, skills, recruiterId } = req.body;
@@ -116,7 +144,6 @@ app.post('/api/jobs', async (req, res) => {
   }
 });
 
-// GET /api/jobs/my-jobs/:recruiterId - Recruiter: Fetches all jobs posted by a specific recruiter
 app.get('/api/jobs/my-jobs/:recruiterId', async (req, res) => {
   try {
     const { recruiterId } = req.params;
@@ -134,7 +161,6 @@ app.get('/api/jobs/my-jobs/:recruiterId', async (req, res) => {
   }
 });
 
-// DELETE /api/jobs/:jobId - Recruiter: Deletes a specific job posting
 app.delete('/api/jobs/:jobId', async (req, res) => {
   try {
     const { jobId } = req.params;
@@ -146,7 +172,6 @@ app.delete('/api/jobs/:jobId', async (req, res) => {
   }
 });
 
-// GET /api/jobs - Job Seeker: Fetches all available jobs (for Job Board)
 app.get('/api/jobs', async (req, res) => {
   try {
     const snapshot = await db.collection('jobs').get();
@@ -161,7 +186,6 @@ app.get('/api/jobs', async (req, res) => {
   }
 });
 
-// GET /api/jobs/:jobId - Fetches details for a single job
 app.get('/api/jobs/:jobId', async (req, res) => {
   try {
     const { jobId } = req.params;
@@ -179,61 +203,90 @@ app.get('/api/jobs/:jobId', async (req, res) => {
 });
 
 
-// --- B. Resume Upload (Phase 4) ---
+// --- B. Resume Upload and Download (Routes unchanged from previous) ---
 
-// POST /api/resumes/upload - Job Seeker: Uploads PDF, parses text, saves to Firestore
 app.post('/api/resumes/upload', upload.single('resume'), async (req, res) => {
-  try {
-    if (!req.file || !req.body.userId) {
-      return res.status(400).send({ message: 'Missing file or user ID.' });
-    }
+    const { userId } = req.body;
+    const filePath = req.file ? req.file.path : null;
+    
+    if (!userId || !filePath) {
+        if (filePath && fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+        }
+        return res.status(400).send({ message: 'User ID or file is missing.' });
+    }
 
-    // 1. Parse PDF file from the buffer
-    const data = await pdf(req.file.buffer);
-    const resumeText = data.text;
+    try {
+        const dataBuffer = fs.readFileSync(filePath);
+        const data = await pdf(dataBuffer);
+        const resumeText = data.text;
 
-    // 2. Save the extracted text to Firestore, linked to the user's ID
-    const userId = req.body.userId;
-    const docRef = db.collection('resumes').doc(userId);
-    
-    await docRef.set({
-      userId: userId,
-      resumeText: resumeText,
-      uploadedAt: new Date().toISOString()
-    }, { merge: true }); // Use merge:true to update if the user uploads a new resume
+        const docRef = db.collection('resumes').doc(userId);
+        await docRef.set({
+            userId,
+            resumeText, 
+            uploadedAt: new Date().toISOString(),
+            filePath: filePath 
+        }, { merge: true });
 
-    res.status(200).send({ message: 'Resume uploaded and processed successfully.' });
+        res.status(200).send({ message: 'Resume uploaded and processed successfully.' });
 
-  } catch (error) {
-    console.error('Error processing PDF upload:', error);
-    res.status(500).send({ message: 'Failed to process resume file.' });
-  }
+    } catch (error) {
+        console.error('Error processing or saving resume:', error);
+        if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+        }
+        res.status(500).send({ message: 'Failed to process PDF or save data.' });
+    }
+});
+
+app.get('/api/resumes/download/:userId', async (req, res) => {
+    const { userId } = req.params;
+
+    try {
+        const docRef = db.collection('resumes').doc(userId);
+        const docSnap = await docRef.get();
+
+        if (!docSnap.exists) {
+            return res.status(404).send({ message: 'Resume metadata not found.' });
+        }
+        
+        const filePath = docSnap.data().filePath;
+
+        if (!filePath || !fs.existsSync(filePath)) {
+            return res.status(404).send({ message: 'File not found on server.' });
+        }
+
+        res.setHeader('Content-Type', 'application/pdf');
+
+        const fileStream = fs.createReadStream(filePath);
+        fileStream.pipe(res);
+
+    } catch (error) {
+        console.error('Error serving resume file:', error);
+        res.status(500).send({ message: 'Failed to retrieve file.' });
+    }
 });
 
 
-// --- C. Matching and Ranking (Phase 5 & 6) ---
+// --- C. Matching and Ranking (Routes unchanged from previous) ---
 
-// GET /api/match/:jobId/:userId - Job Seeker: Calculates match score for one user/job pair
 app.get('/api/match/:jobId/:userId', async (req, res) => {
   try {
     const { jobId, userId } = req.params;
 
-    // 1. Fetch Job Requirements
     const jobDoc = await db.collection('jobs').doc(jobId).get();
     if (!jobDoc.exists) {
       return res.status(404).send({ message: 'Job not found.' });
     }
     const jobSkills = jobDoc.data().skills;
 
-    // 2. Fetch Resume Text
     const resumeDoc = await db.collection('resumes').doc(userId).get();
     if (!resumeDoc.exists || !resumeDoc.data().resumeText) {
-      // Critical for the frontend error handling in MatchAnalysis.jsx
       return res.status(404).send({ message: 'Resume not found for this user.' });
     }
     const resumeText = resumeDoc.data().resumeText;
 
-    // 3. Calculate Match
     const result = matchResumeToJob(resumeText, jobSkills);
 
     res.status(200).send(result);
@@ -244,21 +297,18 @@ app.get('/api/match/:jobId/:userId', async (req, res) => {
   }
 });
 
-// GET /api/applicants/:jobId - Recruiter: Fetches all applicants and returns a ranked list
 app.get('/api/applicants/:jobId', async (req, res) => {
   try {
     const { jobId } = req.params;
 
-    // 1. Fetch Job Requirements
     const jobDoc = await db.collection('jobs').doc(jobId).get();
     if (!jobDoc.exists) {
       return res.status(404).send({ message: 'Job not found.' });
     }
     const jobSkills = jobDoc.data().skills;
 
-    // 2. Fetch ALL uploaded resumes
     const resumesSnapshot = await db.collection('resumes').get();
-    const usersSnapshot = await db.collection('users').get(); // Fetch user emails for display
+    const usersSnapshot = await db.collection('users').get(); 
 
     const usersMap = usersSnapshot.docs.reduce((acc, doc) => {
       acc[doc.id] = doc.data();
@@ -267,27 +317,23 @@ app.get('/api/applicants/:jobId', async (req, res) => {
 
     const applicantsList = [];
 
-    // 3. Iterate through resumes, calculate score, and build applicant object
     for (const resumeDoc of resumesSnapshot.docs) {
       const userId = resumeDoc.id;
       const resumeText = resumeDoc.data().resumeText;
       const userDetails = usersMap[userId];
 
-      // Only process resumes belonging to users that exist in the 'users' collection (logged-in users)
       if (userDetails && userDetails.role === 'Job Seeker') {
         const matchResult = matchResumeToJob(resumeText, jobSkills);
         
         applicantsList.push({
           userId: userId,
-          email: userDetails.email, // Use the stored email for display
+          email: userDetails.email,
           matchScore: matchResult.matchScore,
           matchedSkills: matchResult.matchedSkills,
-          // Note: missingSkills is not required by ApplicantsPage but is useful for logging
         });
       }
     }
 
-    // 4. Sort the list by matchScore (highest score first)
     applicantsList.sort((a, b) => b.matchScore - a.matchScore);
 
     res.status(200).send(applicantsList);
@@ -296,6 +342,106 @@ app.get('/api/applicants/:jobId', async (req, res) => {
     console.error('Error fetching and ranking applicants:', error);
     res.status(500).send({ message: 'Internal server error during applicant ranking.' });
   }
+});
+
+// --- D. AI Features (Job Seeker) ---
+
+// POST /api/ai/coverletter - Generates a personalized cover letter
+app.post('/api/ai/coverletter', async (req, res) => {
+    const { userId, jobTitle, jobDescription, company } = req.body;
+
+    if (!userId) return res.status(400).send({ message: 'User ID is required.' });
+
+    try {
+        const resumeDoc = await db.collection('resumes').doc(userId).get();
+        if (!resumeDoc.exists || !resumeDoc.data().resumeText) {
+            return res.status(404).send({ message: 'Please upload your resume first to generate a cover letter.' });
+        }
+        const resumeText = resumeDoc.data().resumeText;
+
+        const systemPrompt = "You are a professional career coach and copywriter. Your task is to generate a concise, single-page cover letter based on the provided resume and job details. Focus only on the most relevant experience and skills that match the job description.";
+        
+        const userQuery = `Using the following resume text, write a cover letter for the job titled "${jobTitle}" at "${company}". The job description is: "${jobDescription}". Resume Text: "${resumeText}". Only return the body of the letter, starting with the salutation and ending with the closing.`;
+
+        const letterText = await generateGeminiContent(systemPrompt, userQuery);
+        res.status(200).send({ text: letterText });
+
+    } catch (error) {
+        console.error('Error generating cover letter:', error);
+        res.status(500).send({ message: 'Failed to generate cover letter via AI.' });
+    }
+});
+
+
+// POST /api/ai/suggestions - Provides personalized job recommendations
+app.post('/api/ai/suggestions', async (req, res) => {
+    const { userId, allJobs } = req.body;
+
+    if (!userId || !allJobs || allJobs.length === 0) {
+        return res.status(400).send({ message: 'User ID and available jobs are required.' });
+    }
+
+    try {
+        const resumeDoc = await db.collection('resumes').doc(userId).get();
+        if (!resumeDoc.exists || !resumeDoc.data().resumeText) {
+            return res.status(404).send({ message: 'Please upload your resume first for personalized recommendations.' });
+        }
+        const resumeText = resumeDoc.data().resumeText;
+
+        const jobListString = allJobs.map(job => 
+            `ID: ${job.id}, Title: ${job.title}, Skills: ${job.skills}`
+        ).join('; ');
+
+        const systemPrompt = "You are a job recommendation engine. Analyze the Resume Text and the list of available jobs. Select the top 3 job IDs that are the *best semantic fit* for the candidate's experience. Return ONLY a JSON array of the recommended job IDs, using the format: [\"ID_1\", \"ID_2\", \"ID_3\"].";
+
+        const userQuery = `Candidate Resume Text: "${resumeText}". Available Jobs (ID, Title, Skills): ${jobListString}.`;
+
+        const jsonResponse = await generateGeminiContent(systemPrompt, userQuery);
+        
+        let recommendedIds = [];
+        try {
+            recommendedIds = JSON.parse(jsonResponse.trim());
+            if (!Array.isArray(recommendedIds)) {
+                throw new Error("Parsed content is not an array.");
+            }
+        } catch (e) {
+             console.warn("AI returned malformed JSON, returning empty suggestions.", jsonResponse);
+             // Return empty suggestions if the AI doesn't produce perfect JSON
+             return res.status(200).send({ suggestions: [] });
+        }
+
+        res.status(200).send({ suggestions: recommendedIds });
+
+    } catch (error) {
+        console.error('Error fetching job suggestions:', error);
+        res.status(500).send({ message: 'Failed to fetch suggestions via AI.' });
+    }
+});
+
+// POST /api/ai/interview - Generates behavioral interview questions
+app.post('/api/ai/interview', async (req, res) => {
+    const { userId, jobTitle, jobDescription } = req.body;
+
+    if (!userId) return res.status(400).send({ message: 'User ID is required.' });
+
+    try {
+        const resumeDoc = await db.collection('resumes').doc(userId).get();
+        if (!resumeDoc.exists || !resumeDoc.data().resumeText) {
+            return res.status(404).send({ message: 'Please upload your resume first to generate interview questions.' });
+        }
+        const resumeText = resumeDoc.data().resumeText;
+
+        const systemPrompt = "You are an expert HR interviewer. Your task is to generate 5 challenging and specific behavioral interview questions (using the STAR method format) that are tailored to the candidate's resume and the job requirements. Format the output as a numbered list of questions, with no introductory text.";
+        
+        const userQuery = `Generate 5 behavioral interview questions for the job titled "${jobTitle}". The job description is: "${jobDescription}". The candidate's Resume Text is: "${resumeText}".`;
+
+        const questionsText = await generateGeminiContent(systemPrompt, userQuery);
+        res.status(200).send({ text: questionsText });
+
+    } catch (error) {
+        console.error('Error generating interview questions:', error);
+        res.status(500).send({ message: 'Failed to generate interview questions via AI.' });
+    }
 });
 
 

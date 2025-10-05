@@ -6,7 +6,7 @@ import MatchAnalysis from '../components/MatchAnalysis'; // Import the matching 
 
 /**
  * JobDetailPage component displays the full details of a single job.
- * It also conditionally renders the MatchAnalysis for Job Seekers.
+ * It also conditionally renders the MatchAnalysis and AI tools for Job Seekers.
  */
 function JobDetailPage() {
   // Get the jobId from the URL parameters
@@ -17,13 +17,23 @@ function JobDetailPage() {
 
   // State for the fetched job data
   const [job, setJob] = useState(null);
-  // State for managing loading status
+  // State for managing general loading status
   const [loading, setLoading] = useState(true);
-  // State for displaying error messages
+  // State for displaying errors
   const [error, setError] = useState('');
+  
+  // State for Cover Letter Tool
+  const [coverLetter, setCoverLetter] = useState('');
+  const [isGeneratingLetter, setIsGeneratingLetter] = useState(false);
+  const [letterError, setLetterError] = useState('');
 
+  // State for Interview Questions Tool
+  const [interviewQuestions, setInterviewQuestions] = useState('');
+  const [isGeneratingQuestions, setIsGeneratingQuestions] = useState(false);
+  const [questionsError, setQuestionsError] = useState('');
+
+  // --- Fetch Job Details on Mount ---
   useEffect(() => {
-    // Function to fetch the specific job posting
     const fetchJobDetails = async () => {
       setLoading(true);
       setError('');
@@ -35,7 +45,6 @@ function JobDetailPage() {
       }
 
       try {
-        // API endpoint to fetch a single job by its ID
         const response = await axios.get(`http://localhost:5001/api/jobs/${jobId}`);
         setJob(response.data);
       } catch (err) {
@@ -47,7 +56,51 @@ function JobDetailPage() {
     };
 
     fetchJobDetails();
-  }, [jobId]); // Re-fetch if the jobId changes
+  }, [jobId]);
+
+  // --- AI Functions ---
+
+  const handleGenerateCoverLetter = async () => {
+    setLetterError('');
+    setIsGeneratingLetter(true);
+
+    try {
+      const response = await axios.post('http://localhost:5001/api/ai/coverletter', {
+        userId: currentUser.uid,
+        jobTitle: job.title,
+        jobDescription: job.description,
+        company: job.company
+      });
+      // Replace newlines with <br> for better display in JSX
+      setCoverLetter(response.data.text.replace(/\n/g, '<br/>'));
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Failed to generate cover letter. Ensure your resume is uploaded.';
+      setLetterError(msg);
+    } finally {
+      setIsGeneratingLetter(false);
+    }
+  };
+  
+  const handleGenerateQuestions = async () => {
+    setQuestionsError('');
+    setIsGeneratingQuestions(true);
+
+    try {
+      const response = await axios.post('http://localhost:5001/api/ai/interview', {
+        userId: currentUser.uid,
+        jobTitle: job.title,
+        jobDescription: job.description,
+      });
+      // The AI should return a numbered list, which we can display directly.
+      setInterviewQuestions(response.data.text.trim());
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Failed to generate interview questions. Ensure your resume is uploaded.';
+      setQuestionsError(msg);
+    } finally {
+      setIsGeneratingQuestions(false);
+    }
+  };
+
 
   // --- Render Logic ---
 
@@ -63,13 +116,12 @@ function JobDetailPage() {
     return <div className="page-container"><h3>Job Not Found</h3><p>The requested job posting does not exist.</p></div>;
   }
   
-  // Determine if the current user is a Job Seeker
   const isJobSeeker = currentUser?.role === 'Job Seeker';
 
   return (
     <div className="page-container job-detail-page">
       <h1>{job.title}</h1>
-      <p className="company-name-detail">Posted by {job.company}</p>
+      <p className="company-name-detail">Posted by <strong>{job.company}</strong></p>
       <p className="posted-date">Posted: {new Date(job.postedOn).toLocaleDateString()}</p>
 
       <hr className="divider" />
@@ -92,15 +144,64 @@ function JobDetailPage() {
 
       <hr className="divider" />
       
-      {/* --- Conditional Match Analysis for Job Seekers --- */}
+      {/* --- Conditional Match Analysis & AI Tools for Job Seekers --- */}
       {isJobSeeker ? (
-        <section className="match-analysis-section">
-          <h2>Smart Analyzer: See Your Fit</h2>
-          <MatchAnalysis jobId={job.id} />
-        </section>
+        <div className="seeker-tools">
+          
+          {/* 1. Match Analysis (Keyword-based) */}
+          <section className="match-analysis-section">
+            <h2>Smart Analyzer: See Your Fit</h2>
+            <MatchAnalysis jobId={job.id} />
+          </section>
+
+          <hr className="divider" />
+
+          {/* 2. Cover Letter Drafting Tool (AI) */}
+          <section className="ai-tool-box cover-letter-tool">
+            <h3>Cover Letter Drafting (AI)</h3>
+            <p>Generate a tailored cover letter draft based on your uploaded resume and this job description.</p>
+            <button 
+              onClick={handleGenerateCoverLetter} 
+              disabled={isGeneratingLetter}
+              className="btn-ai-action"
+            >
+              {isGeneratingLetter ? 'Drafting...' : 'Generate Cover Letter'}
+            </button>
+            {letterError && <p className="error-message">{letterError}</p>}
+            {coverLetter && (
+              <div className="ai-output-area cover-letter-output">
+                <h4>Generated Letter:</h4>
+                <div dangerouslySetInnerHTML={{ __html: coverLetter }} />
+              </div>
+            )}
+          </section>
+
+          <hr className="divider" />
+
+          {/* 3. Behavioral Interview Question Generator (AI) */}
+          <section className="ai-tool-box interview-coach-tool">
+            <h3>Interview Coach (AI)</h3>
+            <p>Generate personalized behavioral (STAR) questions to prepare for your interview.</p>
+            <button 
+              onClick={handleGenerateQuestions} 
+              disabled={isGeneratingQuestions}
+              className="btn-ai-action"
+            >
+              {isGeneratingQuestions ? 'Generating...' : 'Generate Questions'}
+            </button>
+            {questionsError && <p className="error-message">{questionsError}</p>}
+            {interviewQuestions && (
+              <div className="ai-output-area interview-coach-output">
+                <h4>Tailored Behavioral Questions:</h4>
+                {/* Render the numbered list output directly */}
+                <div dangerouslySetInnerHTML={{ __html: interviewQuestions.replace(/\n/g, '<br/>') }} />
+              </div>
+            )}
+          </section>
+        </div>
       ) : (
         <section className="match-analysis-placeholder">
-          <p>Log in as a Job Seeker and upload a resume to view the Smart Match Analysis for this job!</p>
+          <p>Log in as a <strong>Job Seeker</strong> and upload a resume to view the Smart Match Analysis and AI tools!</p>
         </section>
       )}
 

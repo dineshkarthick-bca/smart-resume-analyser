@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { useAuth } from '../context/AuthContext'; // Needed for user ID
 
 /**
  * JobBoardPage component displays a list of all available job postings 
- * for Job Seekers to browse.
+ * for Job Seekers to browse. AI suggestions feature has been removed.
  */
 function JobBoardPage() {
   // State for the list of all jobs
@@ -14,27 +15,31 @@ function JobBoardPage() {
   // State for displaying error messages
   const [error, setError] = useState('');
 
+  const { currentUser } = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    // Function to fetch all job postings
-    const fetchAllJobs = async () => {
-      setLoading(true);
-      setError('');
-      try {
-        // API endpoint to fetch ALL job postings
-        const response = await axios.get('http://localhost:5001/api/jobs');
-        setJobs(response.data);
-      } catch (err) {
-        setError('Failed to fetch job board listings.');
-        console.error('Error fetching all jobs:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Function to fetch all job postings
+  const fetchAllJobs = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      // API endpoint to fetch ALL job postings
+      const response = await axios.get('http://localhost:5001/api/jobs');
+      setJobs(response.data);
+    } catch (err) {
+      setError('Failed to fetch job board listings.');
+      console.error('Error fetching all jobs:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
+    // NOTE: The fetchRecommendations and recommendedJobs states have been removed
+    // as the feature is no longer active on the frontend.
+    
+  useEffect(() => {
     fetchAllJobs();
-  }, []); // Empty dependency array means this runs only once on mount
+  }, [fetchAllJobs]); 
 
   // Function to shorten the job description for the card view
   const getSnippet = (text, maxLength = 100) => {
@@ -56,20 +61,19 @@ function JobBoardPage() {
     <div className="page-container job-board-page">
       <h2>Find Your Next Opportunity</h2>
       
-      {jobs.length === 0 ? (
-        <p>No job postings are currently available. Check back soon!</p>
-      ) : (
-        <p className="job-count">Showing {jobs.length} active job listings.</p>
-      )}
+      {/* AI Recommendation Box has been REMOVED from this section */}
+      {/* AI Recommendations List has also been REMOVED */}
+
+      <p className="job-count">Showing <strong>{jobs.length}</strong> active job listings.</p>
 
       <div className="job-cards-container">
         {jobs.map(job => (
           <div key={job.id} className="job-card">
             <h3>{job.title}</h3>
-            <p className="company-name">Company: {job.company}</p>
+            <p className="company-name"><strong>Company:</strong> {job.company}</p>
             <p className="description-snippet">{getSnippet(job.description)}</p>
             <p className="required-skills">
-              Key Skills:{getSnippet(job.skills, 50)}
+              <strong>Key Skills:</strong> {getSnippet(job.skills, 50)}
             </p>
             
             {/* Button to navigate to the detailed job page */}
@@ -77,7 +81,7 @@ function JobBoardPage() {
               onClick={() => navigate(`/jobs/${job.id}`)}
               className="btn-details"
             >
-              View Details & Get Match Score
+              View Details & Match Score
             </button>
           </div>
         ))}
