@@ -1,0 +1,31 @@
+/* * NOTE: The main Cyber-Tech Neon theme and color variables are defined 
+ * in frontend/src/index.css. This file is for supplementary structural styles.
+ */
+
+/* ========================================================================= */
+/* Structural Styles */
+/* ========================================================================= */
+
+.app-content {
+    /* Ensures the main content takes up the rest of the page height below the header */
+    min-height: calc(100vh - 80px); /* Assuming header height is around 60-70px */
+}
+
+/* * Loading Screen Style (Used by ProtectedRoute) 
+ * Blends with the dark, neon theme.
+ */
+.loading-screen {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(100vh - 60px); 
+    font-size: 1.5rem;
+    color: var(--neon-primary); /* Uses the theme color variable from index.css */
+    text-shadow: 0 0 10px var(--glow-light);
+}
+
+/* Fallback/Error Page Style */
+.page-container h1 {
+    text-align: center;
+    padding-top: var(--spacing-lg);
+}
