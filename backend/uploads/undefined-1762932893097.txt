@@ -1,0 +1,18 @@
+SARAH CONNOR 
+sarah.connor@email.com 
+SUMMARY 
+A veteran architect specializing in building highly scalable infrastructure using modern cloud 
+computing paradigms. Possesses 7+ years of experience transforming monolithic enterprise 
+systems into resilient, distributed application architectures. 
+TECHNICAL SKILLS 
+* Languages: Golang (Go), Python, JavaScript, Shell Scripting. 
+* Infrastructure: Implemented Infrastructure as Code (IaC) solutions for automated cloud 
+provisioning. Proficient in managing container orchestration platforms and ensuring continuous 
+delivery workflows. 
+* Cloud Experience: Deep expertise in the world’s leading public cloud platform's compute, 
+storage, and networking components. Successfully migrated several legacy applications to 
+Function-as-a-Service (FaaS) environments. 
+PROFESSIONAL EXPERIENCE 
+Senior Systems Architect (2018 - Present) 
+* Directed the complete transition to distributed application architecture. 
+* Maintained deployment workflows using automated testing and version control

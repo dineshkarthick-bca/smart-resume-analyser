@@ -6,6 +6,8 @@ const multer = require('multer');
 const pdf = require('pdf-parse');
 const fs = require('fs');
 const path = require('path');
+// Add this line near your other imports at the top of server.js
+const mammoth = require('mammoth');
 
 dotenv.config();
 
@@ -205,22 +207,46 @@ app.get('/api/jobs/:jobId', async (req, res) => {
 
 // --- B. Resume Upload and Download (Routes unchanged from previous) ---
 
+// POST endpoint for resume upload - NOW HANDLES PDF, DOCX, TXT
 app.post('/api/resumes/upload', upload.single('resume'), async (req, res) => {
     const { userId } = req.body;
-    const filePath = req.file ? req.file.path : null;
-    
+    const filePath = req.file ? req.file.path : null; 
+    let resumeText = '';
+
     if (!userId || !filePath) {
-        if (filePath && fs.existsSync(filePath)) {
-            fs.unlinkSync(filePath);
-        }
+        // ... (standard error and cleanup) ...
         return res.status(400).send({ message: 'User ID or file is missing.' });
     }
 
     try {
         const dataBuffer = fs.readFileSync(filePath);
-        const data = await pdf(dataBuffer);
-        const resumeText = data.text;
+        const fileMimeType = req.file.mimetype;
 
+        // 1. CONDITIONAL PARSING LOGIC
+        if (fileMimeType === 'application/pdf') {
+            // PDF: Use pdf-parse
+            const data = await pdf(dataBuffer);
+            resumeText = data.text;
+
+        } else if (fileMimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+            // DOCX: Use mammoth
+            const result = await mammoth.extractRawText({ buffer: dataBuffer });
+            resumeText = result.value;
+
+        } else if (fileMimeType === 'text/plain') {
+            // TXT: Convert buffer directly
+            resumeText = dataBuffer.toString('utf-8');
+
+        } else {
+            // Unsupported file type
+            throw new Error('Unsupported file type. Please use PDF, DOCX, or TXT.');
+        }
+
+        if (!resumeText.trim()) {
+            throw new Error('Could not extract text from the document. Please ensure the file is not corrupted.');
+        }
+
+        // 2. Save resume text and file path to Firestore
         const docRef = db.collection('resumes').doc(userId);
         await docRef.set({
             userId,
@@ -233,10 +259,12 @@ app.post('/api/resumes/upload', upload.single('resume'), async (req, res) => {
 
     } catch (error) {
         console.error('Error processing or saving resume:', error);
+        // Clean up the file if processing fails
         if (fs.existsSync(filePath)) {
             fs.unlinkSync(filePath);
         }
-        res.status(500).send({ message: 'Failed to process PDF or save data.' });
+        // Send a specific error back to the client if parsing failed
+        res.status(500).send({ message: `Processing failed: ${error.message}` });
     }
 });
 

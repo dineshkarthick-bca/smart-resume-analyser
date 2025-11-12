@@ -18,16 +18,26 @@ function ResumeUploader() {
 
   // Function to handle file selection
   const handleFileChange = (e) => {
-    // Get the first selected file
-    const selectedFile = e.target.files[0];
-    if (selectedFile && selectedFile.type === 'application/pdf') {
-      setFile(selectedFile);
-      setMessage(''); // Clear messages on new file selection
-    } else {
-      setFile(null);
-      setMessage('Please select a valid PDF file.');
-    }
-  };
+  const selectedFile = e.target.files[0];
+  const fileType = selectedFile?.type;
+
+  // Define allowed MIME types
+  const allowedTypes = [
+    'application/pdf', 
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // DOCX
+    'text/plain' // TXT
+  ];
+
+  if (selectedFile && allowedTypes.includes(fileType)) {
+    // File is valid
+    setFile(selectedFile);
+    setMessage(''); 
+  } else {
+    // File is invalid
+    setFile(null);
+    setMessage('Please select a valid PDF, DOCX, or TXT file.');
+  }
+};
 
   // Function to handle form submission (upload)
   const handleUpload = async (e) => {
@@ -79,12 +89,13 @@ function ResumeUploader() {
         <div className="form-group">
           <label htmlFor="resume-file">Select PDF File</label>
           <input
-            id="resume-file"
-            type="file"
-            accept=".pdf" // Only allow PDF files
-            onChange={handleFileChange}
-            required
-          />
+  id="resume-file"
+  type="file"
+  // CRITICAL: Ensure all MIME types are listed
+  accept=".pdf, .docx, .txt, application/vnd.openxmlformats-officedocument.wordprocessingml.document, text/plain" 
+  onChange={handleFileChange}
+  required
+/>
         </div>
         <button type="submit" disabled={uploading || !file}>
           {uploading ? 'Uploading & Analyzing...' : 'Upload Resume'}

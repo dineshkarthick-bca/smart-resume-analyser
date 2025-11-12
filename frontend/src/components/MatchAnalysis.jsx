@@ -74,10 +74,9 @@ function MatchAnalysis({ jobId }) {
   return (
     <div className="analysis-container">
       <h3>Your Match Analysis</h3>
-      <div className="match-score">
-        <p>Match Score</p>
-        <span>{analysis.matchScore}%</span>
-      </div>
+      <div className="match-score central-score">
+        <p>Job Match Score AI Powered</p>
+        <span className={getScoreClass(analysis.matchScore)}>{analysis.matchScore}%</span>      </div>
       <div className="skills-breakdown">
         <div className="skills-matched">
           <h4>✅ Skills You Have</h4>

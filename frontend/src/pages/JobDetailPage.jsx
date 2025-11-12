@@ -150,7 +150,7 @@ function JobDetailPage() {
           
           {/* 1. Match Analysis (Keyword-based) */}
           <section className="match-analysis-section">
-            <h2>Smart Analyzer: See Your Fit</h2>
+            <h2>Analysing Result :</h2>
             <MatchAnalysis jobId={job.id} />
           </section>
 
@@ -158,14 +158,14 @@ function JobDetailPage() {
 
           {/* 2. Cover Letter Drafting Tool (AI) */}
           <section className="ai-tool-box cover-letter-tool">
-            <h3>Cover Letter Drafting (AI)</h3>
-            <p>Generate a tailored cover letter draft based on your uploaded resume and this job description.</p>
+            <h3>Cover Letter Generator</h3>
+            <p>Generate a cover letter draft based on your uploaded resume and this job description using AI.</p>
             <button 
               onClick={handleGenerateCoverLetter} 
               disabled={isGeneratingLetter}
               className="btn-ai-action"
             >
-              {isGeneratingLetter ? 'Drafting...' : 'Generate Cover Letter'}
+              {isGeneratingLetter ? 'Generating...' : 'Generate Cover Letter'}
             </button>
             {letterError && <p className="error-message">{letterError}</p>}
             {coverLetter && (
@@ -180,19 +180,19 @@ function JobDetailPage() {
 
           {/* 3. Behavioral Interview Question Generator (AI) */}
           <section className="ai-tool-box interview-coach-tool">
-            <h3>Interview Coach (AI)</h3>
-            <p>Generate personalized behavioral (STAR) questions to prepare for your interview.</p>
+            <h3>Mock Interview</h3>
+            <p>Generate personalized behavioral questions to prepare for your interview by AI.</p>
             <button 
               onClick={handleGenerateQuestions} 
               disabled={isGeneratingQuestions}
               className="btn-ai-action"
             >
-              {isGeneratingQuestions ? 'Generating...' : 'Generate Questions'}
+              {isGeneratingQuestions ? 'Preparing...' : 'Generate Questions'}
             </button>
             {questionsError && <p className="error-message">{questionsError}</p>}
             {interviewQuestions && (
               <div className="ai-output-area interview-coach-output">
-                <h4>Tailored Behavioral Questions:</h4>
+                <h4>Questions:</h4>
                 {/* Render the numbered list output directly */}
                 <div dangerouslySetInnerHTML={{ __html: interviewQuestions.replace(/\n/g, '<br/>') }} />
               </div>

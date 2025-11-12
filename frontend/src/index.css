@@ -512,3 +512,140 @@ button:disabled {
     margin-bottom: 10px;
     color: var(--text-color);
 }
+/* ========================================================================= */
+/* Match Analysis Specific Styling (Horizontal Card Design) */
+/* ========================================================================= */
+
+.analysis-container {
+    background: var(--card-surface);
+    border: 1px solid var(--border-color); 
+    border-radius: 10px; 
+    padding: var(--spacing-lg);
+    margin-top: var(--spacing-lg);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08); 
+    
+    /* ⚠️ NEW: Flex container for the whole section */
+    display: flex;
+    flex-direction: column; 
+}
+
+/* --- 1. Score Display Area (The Top Panel) --- */
+.match-score.central-score {
+    text-align: center;
+    padding: var(--spacing-md) 0 var(--spacing-lg); 
+    margin: 0; /* Remove top margin */
+    border-bottom: 2px solid var(--border-color); /* Separator line */
+}
+
+.match-score.central-score p {
+    font-size: 1.1rem;
+    color: var(--emerald-dark);
+    font-weight: 600;
+}
+
+.match-score.central-score span {
+    /* Large, attention-grabbing percentage number */
+    font-size: 9rem; /* Make it HUGE */
+    font-weight: 800;
+    color: var(--emerald-dark); 
+    display: block; 
+}
+
+.match-score.central-score small {
+    display: block;
+    color: var(--text-muted);
+    margin-top: -15px; 
+    font-style: italic;
+}
+
+/* --- 2. Skills Breakdown Area (The Bottom Panel) --- */
+
+.skills-breakdown {
+    /* ⚠️ NEW: Horizontal arrangement for the skills lists */
+    display: flex;
+    justify-content: space-around;
+    gap: var(--spacing-lg);
+    margin-top: var(--spacing-lg); /* Space below the score block */
+    padding: 0;
+}
+
+.skills-matched, .skills-missing {
+    flex: 1; 
+    /* Give the lists a slight internal border/background to look like cards */
+    background-color: var(--background-light);
+    padding: var(--spacing-md);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.skills-matched h4 { 
+    color: var(--success-color);
+    font-size: 1.1rem;
+    border-bottom: 1px solid var(--success-color);
+    padding-bottom: 5px;
+    margin-bottom: 10px;
+}
+
+.skills-missing h4 { 
+    color: var(--error-color);
+    font-size: 1.1rem;
+    border-bottom: 1px solid var(--error-color);
+    padding-bottom: 5px;
+    margin-bottom: 10px;
+}
+
+/* Custom list item styling */
+.skills-matched ul, 
+.skills-missing ul {
+    list-style: none;
+    padding-left: 0;
+}
+
+.skills-matched li, 
+.skills-missing li {
+    position: relative;
+    padding-left: 30px; 
+    margin-bottom: 8px;
+    font-size: 0.95rem;
+}
+
+/* Custom Icons */
+.skills-matched li::before {
+    content: '✓'; 
+    color: var(--success-color);
+    font-weight: bold;
+    font-size: 1.2rem;
+    position: absolute;
+    left: 0;
+}
+
+.skills-missing li::before {
+    content: '✕'; 
+    color: var(--error-color);
+    font-weight: bold;
+    font-size: 1.2rem;
+    position: absolute;
+    left: 0;
+}
+
+/* Responsive adjustment for small screens */
+@media (max-width: 768px) {
+    .skills-breakdown {
+        flex-direction: column; /* Stack vertically on small screens */
+    }
+}
+/* ========================================================================= */
+/* CONDITIONAL SCORE COLORING */
+/* ========================================================================= */
+
+.analysis-container .central-score span.score-low {
+    color: var(--error-color); /* Uses the theme's red */
+}
+
+.analysis-container .central-score span.score-medium {
+    color: var(--gold-accent); /* Uses the theme's gold */
+}
+
+.analysis-container .central-score span.score-high {
+    color: var(--success-color); /* Uses the theme's green */
+}
